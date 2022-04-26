@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent( )
         {
+            this.components = new System.ComponentModel.Container();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.camera1Combo = new System.Windows.Forms.ComboBox();
             this.pic1 = new AForge.Controls.VideoSourcePlayer();
@@ -46,6 +47,7 @@
             this.texDistancia = new System.Windows.Forms.TextBox();
             this.tuneObjectFilterButton = new System.Windows.Forms.Button();
             this.objectDetectionCheck = new System.Windows.Forms.CheckBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
@@ -101,6 +103,7 @@
             this.groupBox3.TabIndex = 9;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Cameras Control";
+            this.groupBox3.Enter += new System.EventHandler(this.groupBox3_Enter);
             // 
             // moverMotor
             // 
@@ -236,6 +239,12 @@
             this.objectDetectionCheck.Text = "Ligar Detecção de Objeto";
             this.objectDetectionCheck.UseVisualStyleBackColor = true;
             // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Interval = 1000;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -277,6 +286,7 @@
         private System.Windows.Forms.Button moverMotor;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox conCamera;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 

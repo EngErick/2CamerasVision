@@ -33,7 +33,9 @@ namespace TwoCamerasVision
         {
             try
             {
+                //Define a constante da camera
                 Distancia = distancia;
+                //Calcula a Constante em 3 pontos e pega a media
                 ConstanteCamera += Distancia * (X1Meio - X2Meio);
                 ConstanteCamera += Distancia * (X1Esquerda - X2Esquerda);
                 ConstanteCamera += Distancia * (X1Direita - X2Direita);

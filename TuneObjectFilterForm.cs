@@ -21,7 +21,7 @@ namespace TwoCamerasVision
         private IntRange redRange   = new IntRange( 0, 255 );
         private IntRange greenRange = new IntRange( 0, 255 );
         private IntRange blueRange  = new IntRange( 0, 255 );
-
+       
         // Red range
         public IntRange RedRange
         {

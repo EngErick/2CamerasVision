@@ -26,36 +26,35 @@ namespace TwoCamerasVision
     {
         #region Propriedade   
         public SerialMetodos MetodosSerial { get; set; }
-        public Calculos Calculos { get; set; }      
-        
+        public Calculos Calculos { get; set; }
+        public string DistanciaText { get; set; }
+
         #endregion
 
         #region Variaveis
-        // list of video devices
+        // Lista Dispositivos de Video
         FilterInfoCollection VideoDevices;
-        // form to show detected objects
-        //DetectedObjectsForm detectedObjectsForm;
-        // form to tune object detection filter
+        //Filtro das Cores
         TuneObjectFilterForm TuneObjectFilterForm;
 
         ColorFiltering ColorFilter = new ColorFiltering();
         GrayscaleBT709 GrayFilter = new GrayscaleBT709();
-        // use two blob counters, so the could run in parallel in two threads
+        // Cria dois objetos para processamento simultaneo
         BlobCounter BlobCounter1 = new BlobCounter();
         BlobCounter BlobCounter2 = new BlobCounter();
 
         private AutoResetEvent camera1Acquired = null;
-        // private AutoResetEvent camera2Acquired = null;
         private Thread trackingThread = null;
 
-        // object coordinates in both cameras
+        // Cordenadas do Objeto em Ambas as Cameras (Ponto Medio, Extremidade Esquerda, Extremidade Direita
         private float x1m, y1m, x1e, x1d;
         #endregion
 
         public MainForm()
         {
             InitializeComponent();
-            Calculos= new Calculos();
+            objectDetectionCheck.Checked = true;
+            Calculos = new Calculos();
 
             var postas = SerialPort.GetPortNames();
             foreach (var post in postas)
@@ -65,10 +64,10 @@ namespace TwoCamerasVision
 
             
 
-            // show device list
+            // Mostra Lista Dispositivos 
             try
             {
-                // enumerate video devices
+                // Enumera lista de Dispositivos
                 VideoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
                 if (VideoDevices.Count == 0)
@@ -94,12 +93,11 @@ namespace TwoCamerasVision
             }
             camera1Combo.SelectedIndex = 1;
 
-            //
-            ColorFilter.Red = new IntRange(0, 255);
-            ColorFilter.Green = new IntRange(0, 80);
-            ColorFilter.Blue = new IntRange(0, 80);
+            ColorFilter.Red = new IntRange(145, 255);
+            ColorFilter.Green = new IntRange(75, 145);
+            ColorFilter.Blue = new IntRange(75, 145);
 
-            // configure blob counters
+            // configura o contorno do Objeto
             BlobCounter1.MinWidth = 25;
             BlobCounter1.MinHeight = 25;
             BlobCounter1.FilterBlobs = true;
@@ -110,7 +108,7 @@ namespace TwoCamerasVision
             BlobCounter2.FilterBlobs = true;
             BlobCounter2.ObjectsOrder = ObjectsOrder.Size;
 
-            // create first video source
+            // Cria fonte do video
             VideoCaptureDevice videoSource1 = new VideoCaptureDevice(VideoDevices[camera1Combo.SelectedIndex].MonikerString)
             {
                 DesiredFrameRate = 10
@@ -132,34 +130,21 @@ namespace TwoCamerasVision
                 TuneObjectFilterForm.BlueRange = ColorFilter.Blue;
             }
             TuneObjectFilterForm.Show();
+
+
+
+
         }
 
 
         #region Eventos
-        // Main form closing - stop cameras
-        //private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        //{
-        //    StopCameras();
-        //}
-
-        // On "Tune Object Filter" button click - show filter tuning dialog
-     
-
-        // Object filter properties are updated
+        // Atualiza cores do Filtro
         private void TuneObjectFilterForm_OnFilterUpdate(object sender, EventArgs eventArgs)
         {
             ColorFilter.Red = TuneObjectFilterForm.RedRange;
             ColorFilter.Green = TuneObjectFilterForm.GreenRange;
             ColorFilter.Blue = TuneObjectFilterForm.BlueRange;
         }
-
-        // Turn on/off object detection
-
-
-
-        //-------------------------------------------------------
-
-
         private void ConfirmarConstanteDistancia_Click(object sender, EventArgs e)
         {
             if (texSDistancia.Text == null || texSDistancia.Text == "")
@@ -172,7 +157,27 @@ namespace TwoCamerasVision
             }
         }
 
+        //Atualiza a distancia do objeto a cada 1 segundo
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if(DistanciaText == "+Infinito" || DistanciaText == "-Infinito")
+            {
+                texDistancia.Text = "Objeto Perdido";
+            }
+            else
+            {
+                texDistancia.Text = DistanciaText;
+            }
 
+            
+        }
+
+        private void groupBox3_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        //Envia serial para o esp32
         private void MoverMotor_Click(object sender, EventArgs e)
         {
             //inicia a serial 
@@ -182,7 +187,7 @@ namespace TwoCamerasVision
             MetodosSerial._serialPort.Close();
         }
 
-        // received frame from the 1st camera
+        // Recebe frame do video
         private void VideoSourcePlayer1_NewFrame(object sender, ref Bitmap image)
         {
             if (objectDetectionCheck.Checked)
@@ -190,35 +195,39 @@ namespace TwoCamerasVision
                 Bitmap objectImage1 = ColorFilter.Apply(image);
                 Bitmap objectImage2 = ColorFilter.Apply(image);
 
+                //divide a imagem da camera em duas para o processamento
                 BitmapData objectData1 = objectImage1.LockBits(new Rectangle(0, 0, image.Width / 2, image.Height), ImageLockMode.ReadOnly, image.PixelFormat);
                 BitmapData objectData2 = objectImage2.LockBits(new Rectangle(image.Width / 2, 0, image.Width / 2, image.Height), ImageLockMode.ReadOnly, image.PixelFormat);
 
                 objectImage1.UnlockBits(objectData1);
                 objectImage2.UnlockBits(objectData2);
 
+                //binariza imagem do video
                 UnmanagedImage grayImage1 = GrayFilter.Apply(new UnmanagedImage(objectData1));
                 UnmanagedImage grayImage2 = GrayFilter.Apply(new UnmanagedImage(objectData2));
 
 
                 BlobCounter1.ProcessImage(grayImage1);
+                //Desenha e define o objeto da camera 2
                 var xy1 = DesenhaQuadrado(image, objectImage1, 0, BlobCounter1);
+                //Define os pontos do objeto da camera 2
                 Calculos.X1Meio = xy1[0];
                 Calculos.X1Esquerda = xy1[1];
                 Calculos.X1Direita = xy1[2];
                 Calculos.Y1 = xy1[3];
-                //Console.WriteLine("X1meio: " + X1Meio + " X1Esquerda: " + X1Esquerda + " X1Direta: " + X1Direita);
 
 
 
 
                 BlobCounter2.ProcessImage(grayImage2);
+                //Desenha e define o objeto da camera 2
                 var xy2 = DesenhaQuadrado(image, objectImage2, image.Width / 2, BlobCounter2);
+                //Define os pontos do objeto da camera 2
                 Calculos.X2Meio = xy2[0];
                 Calculos.X2Esquerda = xy2[1];
                 Calculos.X2Direita = xy2[2];
                 Calculos.Y2 = xy2[3];
 
-                //Console.WriteLine("X2meio: " + X2Meio + " X2Esquerda: " + X2Esquerda + " X2Direta: " + X2Direita);
 
                 if (Calculos.ConstanteCamera != 0)
                 {
@@ -233,12 +242,24 @@ namespace TwoCamerasVision
                         }
 
                         distancias /= 10;
+                        try
+                        {
+                            DistanciaText = distancias.ToString();
+                        }
+                        catch(Exception ex) 
+                        {
+                        
+                        }
+                        
                         Console.WriteLine(distancias);
                         Calculos.ListaDistancia = new List<float>();
                     }
                 }
             }
         }
+
+       
+
         public List<float> DesenhaQuadrado(Bitmap image, Bitmap objectImage, int x, BlobCounter blobCounter)
         {
             Rectangle[] rects = blobCounter.GetObjectsRectangles();
@@ -247,7 +268,7 @@ namespace TwoCamerasVision
             {
                 Rectangle objectRect = rects[0];
 
-                // draw rectangle around derected object
+                // desenha retangulo envolta do objeto
                 Graphics g = Graphics.FromImage(image);
 
                 using (Pen pen = new Pen(Color.FromArgb(160, 255, 160), 3))
@@ -258,7 +279,6 @@ namespace TwoCamerasVision
                 }
 
                 g.Dispose();
-                // get object's center coordinates relative to image center
                 lock (this)
                 {
                     var metadeImagem = objectImage.Width / 2;
