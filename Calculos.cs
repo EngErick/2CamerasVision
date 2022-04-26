@@ -16,20 +16,20 @@ namespace TwoCamerasVision
         public float X2Esquerda { get; set; }
         public float X2Direita { get; set; }
         public float Y2 { get; set; }
-        public List<float> listaDistancia { get; set; }
+        public List<float> ListaDistancia { get; set; }
 
         public Calculos()
         {
-            listaDistancia = new List<float>();
+            ListaDistancia = new List<float>();
         }
 
-        public float calDistancia()
+        public float CalDistancia()
         {
             //Calculo
             Distancia = ConstanteCamera / (X1Meio - X2Meio);
             return Distancia;
         }
-        public float calConstante(float distancia)
+        public float CalConstante(float distancia)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace TwoCamerasVision
 
                 return ConstanteCamera;
             }
-            catch (Exception ex)
+            catch
             {
                 return 0;
             }

@@ -83,7 +83,7 @@
             this.pic1.Size = new System.Drawing.Size(885, 298);
             this.pic1.TabIndex = 0;
             this.pic1.VideoSource = null;
-            this.pic1.NewFrame += new AForge.Controls.VideoSourcePlayer.NewFrameHandler(this.videoSourcePlayer1_NewFrame);
+            this.pic1.NewFrame += new AForge.Controls.VideoSourcePlayer.NewFrameHandler(this.VideoSourcePlayer1_NewFrame);
             // 
             // groupBox3
             // 
@@ -110,7 +110,7 @@
             this.moverMotor.TabIndex = 18;
             this.moverMotor.Text = "&Mover Motor";
             this.moverMotor.UseVisualStyleBackColor = true;
-            this.moverMotor.Click += new System.EventHandler(this.moverMotor_Click);
+            this.moverMotor.Click += new System.EventHandler(this.MoverMotor_Click);
             // 
             // label3
             // 
@@ -137,7 +137,7 @@
             this.button1.TabIndex = 15;
             this.button1.Text = "&Confirmar";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.ConfirmarConstanteDistancia_Click);
             // 
             // label1
             // 
