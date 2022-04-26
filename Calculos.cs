@@ -20,7 +20,7 @@ namespace TwoCamerasVision
 
         public Calculos()
         {
-
+            listaDistancia = new List<float>();
         }
 
         public float calDistancia()

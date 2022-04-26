@@ -63,7 +63,7 @@ namespace TwoCamerasVision
                 portSerial.Items.Add(post);
             }
 
-            listaDistancia = new List<float>();
+            
 
             // show device list
             try
