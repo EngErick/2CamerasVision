@@ -1,0 +1,48 @@
+#include <Stepper.h> Biblioteca do Motor de Passo
+#include <BluetoothSerial.h> //Biblioteca para o uso Bluetooth
+
+
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run `make menuconfig` to and enable it
+#endif
+
+BluetoothSerial SerialBT;
+
+
+const int stepsPerRevolution = 2048;  
+const int steps = 128; // revolução= 2048 ; utilizando da regra de 3 para girar a cada ~22,5º 
+
+// ULN2003 Motor Driver Pins
+#define IN1 19
+#define IN2 18
+#define IN3 5
+#define IN4 17
+
+// initialize the stepper library
+Stepper myStepper(stepsPerRevolution, IN1, IN3, IN2, IN4);
+
+
+void setup() {
+  
+  // Set da Velocidade em RPM
+  myStepper.setSpeed(5);
+
+  
+  // initialize the serial port
+  Serial.begin(115200);
+  SerialBT.begin("ESP32CameraMotor"); //Nome do dispositivo Bluetooth 
+  Serial.println("O Dispositivo ja esta pronto para parear");
+}
+
+void loop() {
+     switch (SerialBT.available() > 0) {
+  case true:
+    Serial.println("Serial.Available");
+    myStepper.step(steps);
+    delay(1000);
+    Serial.println(SerialBT.read());
+    break;
+  default:
+    break;
+    }
+  }
