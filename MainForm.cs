@@ -1,9 +1,4 @@
-﻿// Two Cameras Vision
-//
-// Copyright © Andrew Kirillov, 2009
-// andrew.kirillov@aforgenet.com
-//
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -93,7 +88,7 @@ namespace TwoCamerasVision
             }
             camera1Combo.SelectedIndex = 1;
 
-            ColorFilter.Red = new IntRange(145, 255);
+            ColorFilter.Red = new IntRange(145, 200);
             ColorFilter.Green = new IntRange(75, 145);
             ColorFilter.Blue = new IntRange(75, 145);
 
@@ -182,8 +177,9 @@ namespace TwoCamerasVision
         {
             //inicia a serial 
             MetodosSerial = new SerialMetodos(portSerial.Text, 11520);
+            MetodosSerial._serialPort.Open();
             //Comunica'
-            MetodosSerial._serialPort.Write("go");
+            MetodosSerial._serialPort.Write("g");
             MetodosSerial._serialPort.Close();
         }
 

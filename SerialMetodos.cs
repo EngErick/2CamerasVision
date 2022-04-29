@@ -1,4 +1,8 @@
-﻿using System;
+﻿/*Classe Serial
+ * Classe para processar todos os metodos serial para a comunicação com o Esp32
+ */
+
+using System;
 using System.Collections.Generic;
 using System.IO.Ports;
 using System.Text;
@@ -11,9 +15,10 @@ namespace TwoCamerasVision
         private string NomeText { get; set; }
         private int BaudRate { get; set; }
 
+        //Metodo para inicializar a Porta Serial
         public SerialMetodos(string nomeText , int baudRate)
         {
-            _serialPort = new SerialPort();
+            _serialPort = new SerialPort(nomeText, baudRate);
             NomeText = nomeText;
             BaudRate = baudRate;
         }

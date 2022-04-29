@@ -1,4 +1,8 @@
-﻿using System;
+﻿/* Classe Calculo
+ * Esta Classe e a responsavel por receber as coordenadas do Objeto e utilizar essas coordenadas para calcular a distancia e/ou calcular a constante FX da camera
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -23,12 +27,15 @@ namespace TwoCamerasVision
             ListaDistancia = new List<float>();
         }
 
-        public float CalDistancia()
+        //Metodo Para calcular a distancia do Objeto a Camera
+        public float CalDistancia() 
         {
             //Calculo
             Distancia = ConstanteCamera / (X1Meio - X2Meio);
             return Distancia;
         }
+
+        //Metodo para calcular a Constante FX descrita como "Constante da Camera"
         public float CalConstante(float distancia)
         {
             try
