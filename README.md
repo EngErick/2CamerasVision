@@ -33,66 +33,82 @@ Nesse Projeto estamos utilizando
  
  ![Squematico-de-Ligação-ESP32](https://user-images.githubusercontent.com/102180418/165989013-d8b7d28f-269c-492a-86b2-5eaf294b979e.png)
  
- +Instalação do Modulo Binocular HBVCAM-1780-2 s1.0
+ + Instalação do Modulo Binocular HBVCAM-1780-2 s1.0
+ 
  Para o modulo da Camera Basta fixa-la de forma que esteja linear e de Frente a Area onde o Objeto estara, a camera utiliza um Protocolo de Comunicação UVC com Windows 2000\ Windows XP\Windows 7/ Linux  e Android , não e necessario baixar nenhum driver para a mesma, apenas estar conectada via USB.
  
  Em nosso projeto contruimos uma estrutura circular de madeira e pintamos de preto para facilitar a observação.
  ![Caixa Fechada](https://user-images.githubusercontent.com/102180418/165991247-31c2b02d-caeb-4cf9-9ac6-0110d50ad797.jpeg)![Caixa Aberta](https://user-images.githubusercontent.com/102180418/165991260-72eb5cd8-ec1e-484c-813e-716de045c4fd.jpeg)
 
+ +Observações sobre o Codigo Fonte
+ 
+ Nosso codigo teve como base de um exemplo de esterioscopia utilizando duas Webcam, porem quando fomos utilizar o modulo binocular varias alterações tiveram que ser feitas.
+ A mais importante e significativa era sobre o tratamento que era dado ao processamento da imagem. O Modulo HBVCAM nos envia uma unica imagem inteira contendo a imagem das duas cameras por tal razão tivemos que "dividir" a imagem em duas para facilitar o processo de binarização e consequentemente detecção do Objeto
+ 
+ ![image](https://user-images.githubusercontent.com/102180418/166150936-da77c915-2080-4c7b-91e0-9f0c44053294.png)
 
-A step by step series of examples that tell you how to get a development
-environment running
+ 
+Codigo da divisão da imagem
 
-Say what the step will be
+    //divide a imagem da camera em duas para o processamento
+    BitmapData objectData1 = objectImage1.LockBits(new Rectangle(0, 0, image.Width / 2, image.Height), ImageLockMode.ReadOnly, image.PixelFormat);
+    BitmapData objectData2 = objectImage2.LockBits(new Rectangle(image.Width / 2, 0, image.Width / 2, image.Height), ImageLockMode.ReadOnly, image.PixelFormat);
 
-    Give the example
+Contudo mesmo dividindo a imagem em duas ainda temos o problema com as coordenadas em pixel do objeto que ainda continham o tamanho total da imagem.Fizemos o mesmo tipo de processamento para adquiri-las
+![image](https://user-images.githubusercontent.com/102180418/166151011-8f6da1f3-2f12-4e27-ad8e-6cc652090d7e.png)
 
-And repeat
+O Objeto da direita carrega o valor em vermelho e não o de amarelo por isso tivemos que subtrair metada de imagem
 
-    until finished
+Codigo do tratamento do objeto
 
-End with an example of getting some data out of the system or using it
-for a little demo
+    if (objectRect.Left < (metadeImagem) && objectRect.Right < (metadeImagem)) // Caso as coordenadas sejam do objeto a esquerda
+                    {
 
-## Deployment
+                        x1e = objectRect.Left;
+                        x1d = objectRect.Right;
+                        x1m = (x1e + x1d) / 2;
+                        y1m = (objectImage.Height - (objectRect.Top + objectRect.Bottom)) / 2;
+                    }
+                    //Caso o Objeto tenha coordenadas mistas(Ambas a direita e esqueda da imagem)
+                    else if ((objectRect.Left >= (metadeImagem) && objectRect.Right < (metadeImagem)) || (objectRect.Left < (metadeImagem) && objectRect.Right >= (metadeImagem))) 
+                    {
 
-Add additional notes to deploy this on a live system
+                    }
+                    else //Caso as coordenadas sejam do objeto a direita 
+                    {
+                        x1e = (objectRect.Left - metadeImagem);
+                        x1d = (objectRect.Right - metadeImagem);
 
-## Built With
+                        x1m = (x1e + x1d) / 2;
+                        y1m = (objectImage.Height - (objectRect.Top + objectRect.Bottom)) / 2;
 
-  - [Contributor Covenant](https://www.contributor-covenant.org/) - Used
-    for the Code of Conduct
-  - [Creative Commons](https://creativecommons.org/) - Used to choose
-    the license
+                    }
 
-## Contributing
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code
-of conduct, and the process for submitting pull requests to us.
+Definido as coordenadas do objeto em pixel podemos agora partir para o calculo da mesma. Para calcular a distancia de um objeto ate as cameras se faz uso da seguinte equação:
 
-## Versioning
+![image](https://user-images.githubusercontent.com/102180418/166150390-e906e3b3-816d-466a-8532-7bb34f811f29.png)
 
-We use [Semantic Versioning](http://semver.org/) for versioning. For the versions
-available, see the [tags on this
-repository](https://github.com/PurpleBooth/a-good-readme-template/tags).
+Contudo O fator fX depende de duas características que se mantem fixas portanto para podermos adquirir esse fator e necessario no primeiro momento em que iniciarmos o programa setar o objeto em uma distancia conhecida para adquirirmos esse fator 
 
-## Authors
+![image](https://user-images.githubusercontent.com/102180418/166150643-8cdc8c1d-5e26-48f9-8893-5e1c2c1a48e7.png)
 
-  - **Billie Thompson** - *Provided README Template* -
-    [PurpleBooth](https://github.com/PurpleBooth)
+e assim quando confirmarmos esse valor nosso programa ira calcular e guardar esse fator para futuros calculos da imagem
 
-See also the list of
-[contributors](https://github.com/PurpleBooth/a-good-readme-template/contributors)
-who participated in this project.
+![image](https://user-images.githubusercontent.com/102180418/166150835-6100ed89-1cce-437a-9905-c6acdf081307.png)
 
-## License
+## Referencias
+Nesse Projeto nos utilizamos as bibliotecas do AForge bem como um de seus exemplos de visão estéreo e detecção objeto utilizando 2 Webcams para saber mais deixaremos o link de accesso:http://www.aforgenet.com/articles/step_to_stereo_vision/
 
-This project is licensed under the [CC0 1.0 Universal](LICENSE.md)
-Creative Commons License - see the [LICENSE.md](LICENSE.md) file for
-details
+Para o calculo da visão estereoscópica utilizamos o projeto "Estereoscopia no cálculo de distância e controle de 
+plataforma robótica"  tambem deixaremos o link de acesso :http://www.decom.ufop.br/sibgrapi2012/eproceedings/wuw/102815_1.pdf
 
-## Acknowledgments
+## Autores
 
-  - Hat tip to anyone whose code is used
-  - Inspiration
-  - etc
+ - Erick Silva Barros
+ - Matheus Souza Cavalcante
+
+## Agradecimentos
+
+  - Ao nosso Professor Alberto Willian Mascarenhas que nos inspirou nessa ideia e nos ajudou em todo processo de desenvolvimento do projeto
+  - 
